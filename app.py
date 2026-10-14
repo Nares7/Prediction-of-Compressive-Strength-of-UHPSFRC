@@ -250,8 +250,7 @@ with right:
     c.metric("Fiber volume (%)", f"{fiber_amt / 78.5:.2f}", help="Fiber amount ÷ steel density (7850 kg/m³)")
     d.metric("SP / binder (%)", f"{100 * sp / binder_total:.2f}")
 
-    if "test_r2" in meta:
-        st.caption(f"Model: **{meta.get('model_name', 'Gradient Boosting')}** · test R² = {meta['test_r2']:.3f}")
+
 
     out = st.session_state["inputs"].copy()
     out["Predicted compressive strength (MPa)"] = round(pred, 2)
