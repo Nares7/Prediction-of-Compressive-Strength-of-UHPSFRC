@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import streamlit as st
+import altair as alt
 
 # ----------------------------------------------------------------------------
 # Page setup
@@ -200,6 +201,21 @@ def build_input() -> pd.DataFrame:
     return pd.DataFrame([values])[FEATURES]
 
 
+def line_plot(df, x, y="Strength (MPa)"):
+    """Line chart whose y-axis zooms to the data range (st.line_chart always starts at 0)."""
+    chart = (
+        alt.Chart(df)
+        .mark_line(point=True, color="#1d5a8a")
+        .encode(
+            x=alt.X(x, title=x),
+            y=alt.Y(y, scale=alt.Scale(zero=False), title=y),
+            tooltip=[x, alt.Tooltip(y, format=".1f")],
+        )
+        .properties(height=360)
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+
 def classify(f: float) -> str:
     if f < 100:
         return "Below typical UHPC range (< 100 MPa)"
@@ -275,29 +291,50 @@ with t1:
     grid = pd.concat([X_in] * len(days), ignore_index=True)
     grid["Curing period (Days)"] = days
     curve = pd.DataFrame({"Curing period (days)": days, "Strength (MPa)": model.predict(grid)})
-    st.line_chart(curve, x="Curing period (days)", y="Strength (MPa)")
+    line_plot(curve, "Curing period (days)")
 
 with t2:
-    st.caption("Change one variable at a time (others fixed at current values) and see the effect on strength.")
-    sweep_options = {
-        "Cement (kg/m³)": (270, 1250, 40),
-        "Silica fume (kg/m³)": (0, 430, 20),
-        "Water (kg/m³)": (90, 270, 10),
-        "Superplasticizer (kg/m³)": (1, 57, 3),
-        "Fiber amount (kg/m³)": (25, 160, 5),
-        "Steel Fiber Aspect Ratio": (30, 90, 5),
-        "Curing temperature  (°C)": (20, 210, 10),
-        "Aggregate (kg/m³)": (410, 1990, 80),
+    st.caption(
+        "Pick any mix variable from the list. All other inputs stay fixed at the values you entered, "
+        "so you see the effect of that one variable on strength."
+    )
+    # label -> (training column(s), min, max, step); ranges follow the training data
+    SWEEP = {
+        "Cement": (["Cement (kg/m³)", "Cement (kg/m³).1"], 270, 1250, 20),
+        "Blast furnace slag": (["Blast furnace slag (kg/m³)", "Blast furnace slag (kg/m³).1"], 0, 375, 15),
+        "Silica fume": (["Silica fume (kg/m³)", "Silica fume (kg/m³).1"], 0, 430, 15),
+        "Fly ash": (["Fly ash (kg/m³)"], 0, 356, 15),
+        "Limestone powder": (["Limestone powder (kg/m³)"], 0, 1060, 40),
+        "Quartz powder": (["Quartz powder (kg/m³)"], 0, 400, 15),
+        "Nano silica": (["Nano Silica (kg/m³)"], 0, 47.5, 2),
+        "Aggregate": (["Aggregate (kg/m³)"], 410, 1990, 60),
+        "Water": (["Water (kg/m³)"], 90, 270, 6),
+        "Superplasticizer": (["Superplasticizer (kg/m³)"], 1, 57, 2),
+        "Steel fiber amount": (["Fiber amount (kg/m³)"], 25, 160, 5),
+        "Steel fiber aspect ratio": (["Steel Fiber Aspect Ratio"], 30, 90, 2),
+        "Curing temperature": (["Curing temperature  (°C)"], 20, 210, 10),
+        "Curing period": (["Curing period (Days)"], None, None, None),
+        "Steel fiber type": (["Steel Fiber Type"], None, None, None),
     }
-    var = st.selectbox("Variable to vary", list(sweep_options))
-    lo, hi, step = sweep_options[var]
-    xs = np.arange(lo, hi + step, step)
-    g = pd.concat([X_in] * len(xs), ignore_index=True)
-    g[var] = xs
-    if var in ("Cement (kg/m³)", "Silica fume (kg/m³)"):  # keep duplicated training columns in sync
-        g[var + ".1"] = xs
-    sens = pd.DataFrame({var: xs, "Strength (MPa)": model.predict(g)})
-    st.line_chart(sens, x=var, y="Strength (MPa)")
+    st.markdown("**Variable to vary**")
+    var = st.pills(
+        "Variable to vary", list(SWEEP), default="Cement",
+        selection_mode="single", key="sweep_var", label_visibility="collapsed",
+    ) or "Cement"   # pills can be un-clicked; fall back to Cement
+    cols, lo, hi, step = SWEEP[var]
+
+    if var == "Steel fiber type":
+        g = pd.concat([X_in] * len(FIBER_TYPES), ignore_index=True)
+        g["Steel Fiber Type"] = FIBER_TYPES
+        sens = pd.DataFrame({"Steel fiber type": FIBER_TYPES, "Strength (MPa)": model.predict(g)})
+        st.bar_chart(sens, x="Steel fiber type", y="Strength (MPa)", horizontal=True)
+    else:
+        xs = np.array(CURING_PERIODS) if var == "Curing period" else np.arange(lo, hi + step / 2, step)
+        g = pd.concat([X_in] * len(xs), ignore_index=True)
+        for c in cols:                      # duplicated training columns stay in sync
+            g[c] = xs
+        sens = pd.DataFrame({var: xs, "Strength (MPa)": model.predict(g)})
+        line_plot(sens, var)
 
 with t3:
     st.caption("Impurity-based importance from the Gradient Boosting model (one-hot fiber columns are summed).")
@@ -329,4 +366,4 @@ with st.expander("ℹ️ About & limitations"):
         - Results are for research and preliminary mix design; always confirm with laboratory tests.
         """
     )
-st.caption("© UHPSFRC Strength Predictor · Created by Naresh Bhatta")
+st.caption("© UHPSFRC Strength Predictor · built with Streamlit")
