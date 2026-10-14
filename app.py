@@ -64,6 +64,37 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Hide the Streamlit Cloud badge / profile button that the platform adds outside the app
+import streamlit.components.v1 as components
+
+components.html(
+    """
+    <script>
+    (function () {
+      try {
+        const doc = window.parent.document;
+        const SELECTORS = [
+          '[class*="viewerBadge"]', '[class*="_profileContainer"]',
+          '[class*="_terminalButton"]', '[data-testid="appCreatorAvatar"]'
+        ].join(',');
+        const hide = () => {
+          doc.querySelectorAll(SELECTORS).forEach(e => e.style.setProperty('display', 'none', 'important'));
+          // fallback: fixed-position items in the bottom-right corner that link to streamlit
+          doc.querySelectorAll('a[href*="streamlit.io"], a[href*="streamlit.app"]').forEach(a => {
+            const box = a.closest('[class*="viewerBadge"]') || a;
+            const pos = window.parent.getComputedStyle(box).position;
+            if (pos === 'fixed') box.style.setProperty('display', 'none', 'important');
+          });
+        };
+        hide();
+        new MutationObserver(hide).observe(doc.body, {childList: true, subtree: true});
+      } catch (e) { /* not allowed to reach the parent page: nothing to do */ }
+    })();
+    </script>
+    """,
+    height=0,
+)
+
 # ----------------------------------------------------------------------------
 # Locate & load the model (works even if the file was renamed or put in a subfolder)
 # ----------------------------------------------------------------------------
