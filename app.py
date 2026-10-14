@@ -377,8 +377,8 @@ with st.expander("ℹ️ About & limitations"):
         """
     )
 st.markdown(
-    "<div style='text-align:center; opacity:.75; font-size:.9rem; padding-top:.5rem;'>"
-    "Created by <b>Naresh Bhatta</b><br>Kathmandu University, Kathmandu, Nepal"
+    "<div style='text-align:center; opacity:.75; font-size:.11rem; padding-top:.5rem;'>"
+    "Created by <b>Naresh Bhatta</b><br>Kathmandu University, Nepal"
     "</div>",
     unsafe_allow_html=True,
 )
