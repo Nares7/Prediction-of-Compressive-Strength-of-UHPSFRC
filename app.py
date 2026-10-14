@@ -376,4 +376,9 @@ with st.expander("ℹ️ About & limitations"):
         - Results are intended for research and preliminary mix design; confirm with laboratory tests.
         """
     )
-st.caption("UHPSFRC Strength Predictor · built with Streamlit")
+st.markdown(
+    "<div style='text-align:center; opacity:.75; font-size:.9rem; padding-top:.5rem;'>"
+    "Created by <b>Naresh Bhatta</b><br>Kathmandu University, Kathmandu, Nepal"
+    "</div>",
+    unsafe_allow_html=True,
+)
