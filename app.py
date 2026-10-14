@@ -325,7 +325,6 @@ with t3:
 with st.expander("ℹ️ About & limitations"):
     st.markdown(
         """
-        - Model: Gradient Boosting Regressor trained on a literature-compiled UHPSFRC database (662 mixes).
         - Predictions are only reliable **inside the ranges of the training data** (shown in each input's tooltip).
         - Results are for research and preliminary mix design; always confirm with laboratory tests.
         """
