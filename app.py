@@ -32,6 +32,10 @@ st.markdown(
     """
     <style>
         .block-container {padding-top: 2rem; max-width: 1250px;}
+        /* hide the Fork and GitHub buttons in the top-right toolbar */
+        [data-testid="stToolbarActions"],
+        [data-testid="stAppDeployButton"],
+        .stAppDeployButton {display: none !important;}
         .hero {
             background: linear-gradient(120deg, #0f2a43 0%, #1d5a8a 100%);
             padding: 1.6rem 2rem; border-radius: 14px; color: #fff; margin-bottom: 1.2rem;
