@@ -29,8 +29,21 @@ st.set_page_config(
 )
 
 BASE_DIR = Path(__file__).parent
-MODEL_PATH = BASE_DIR / "best_model.pkl"
-META_PATH = BASE_DIR / "best_model.json"
+
+
+def find_file(pattern: str):
+    """Find a model file anywhere in the repo (handles renamed files / subfolders)."""
+    exact = BASE_DIR / pattern
+    if exact.exists():
+        return exact
+    ext = Path(pattern).suffix
+    matches = sorted(BASE_DIR.rglob(f"*{ext}"))
+    matches = [m for m in matches if "best_model" in m.name.lower()] or matches
+    return matches[0] if matches else None
+
+
+MODEL_PATH = find_file("best_model.pkl")
+META_PATH = find_file("best_model.json")
 
 st.markdown(
     """
@@ -68,11 +81,20 @@ def load_model():
 
 @st.cache_data
 def load_meta():
-    if META_PATH.exists():
+    if META_PATH is not None and META_PATH.exists():
         with open(META_PATH) as f:
             return json.load(f)
     return {}
 
+
+if MODEL_PATH is None:
+    st.error(
+        "Model file not found. Upload **best_model.pkl** to the same GitHub folder as app.py "
+        "(files in the repo root: "
+        + ", ".join(sorted(p.name for p in BASE_DIR.iterdir()))
+        + ")."
+    )
+    st.stop()
 
 model = load_model()
 meta = load_meta()
@@ -308,4 +330,4 @@ with st.expander("ℹ️ About & limitations"):
         - Results are for research and preliminary mix design; always confirm with laboratory tests.
         """
     )
-st.caption("© UHPSFRC Strength Predictor · built with Streamlit")
+st.caption("© UHPSFRC Strength Predictor · Created by Naresh Bhatta")
