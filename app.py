@@ -36,6 +36,12 @@ st.markdown(
         [data-testid="stToolbarActions"],
         [data-testid="stAppDeployButton"],
         .stAppDeployButton {display: none !important;}
+        /* hide the bottom-right Streamlit Cloud badge and profile / manage-app button */
+        [class*="viewerBadge"],
+        [class*="_profileContainer"],
+        [class*="_terminalButton"],
+        [data-testid="appCreatorAvatar"],
+        footer {display: none !important;}
         .hero {
             background: linear-gradient(120deg, #0f2a43 0%, #1d5a8a 100%);
             padding: 1.6rem 2rem; border-radius: 14px; color: #fff; margin-bottom: 1.2rem;
